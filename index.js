@@ -8,12 +8,13 @@ var program = require('commander');
 
 
 program
-  .version('0.0.1')
+  .version('0.0.2')
   .usage('dot-packer')
   .option('-d, --dir [value]', 'Target directory <path>')
   .option('-e, --encoding [value]', 'file encoding to be used (in and out). can be ascii or utf8. defaults to utf8.')
   .option('-o, --output [value]', 'Output file <path>', "jst.js")
   .option('-n, --ns [value]', 'The GLOBAL variable to pack the templates in',"JST")
+  .option('-c, --dontcompress', 'Don\'t compress the result')
   .parse(process.argv);
 
 
@@ -33,14 +34,18 @@ else  {
 				code += convert(files[i],program.ns)+"\r\n";
 			}
 		}
-		
-		var ast = ugly.parse(code); // parse code and get the initial AST
-		ast.figure_out_scope();
-		var compressed=ast.transform(ugly.Compressor());
-		compressed.figure_out_scope();
-		compressed.compute_char_frequency();
-		compressed.mangle_names();
-	        var final_code = compressed.print_to_string(); // compressed code here
+		if (!program.dontcompress) {
+			var ast = ugly.parse(code); // parse code and get the initial AST
+			ast.figure_out_scope();
+			var compressed=ast.transform(ugly.Compressor());
+			compressed.figure_out_scope();
+			compressed.compute_char_frequency();
+			compressed.mangle_names();
+		        var final_code = compressed.print_to_string(); // compressed code here
+		}
+		else {
+			var final_code=code;
+		}
         
 		fs.writeFileSync(program.output,final_code, program.encoding);
 	}
